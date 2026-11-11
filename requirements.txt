@@ -1,0 +1,14 @@
+# What:     Runtime dependencies, pinned exactly for reproducible installs.
+# In:       pip install -r requirements.txt
+# Out:      Everything the API and pipeline need at runtime.
+# Fails if: A pin has no wheel for your Python/OS and pip falls back to a source build (tested OK on 3.14.3 / macOS x86_64).
+# Each package is justified in README.md#dependencies.
+
+fastapi==0.162.4
+uvicorn==0.54.0
+python-multipart==0.0.33
+pydantic==2.14.3
+pdfplumber==0.11.10
+pytesseract==0.3.13
+anthropic==2.8.0
+python-dotenv==1.2.4

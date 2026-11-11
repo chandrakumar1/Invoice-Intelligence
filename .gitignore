@@ -1,0 +1,23 @@
+# What:     Keeps secrets, PII, and local junk out of git.
+# In:       Paths git would otherwise track.
+# Out:      An index with only source, fixtures, and docs.
+# Fails if: Someone stores real invoices outside tests/fixtures/private/ or data/.
+
+# Secrets
+.env
+
+# PII: uploaded documents, stored results, real-world fixtures
+data/
+tests/fixtures/private/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# OS / editors
+.DS_Store
+.vscode/
+.idea/

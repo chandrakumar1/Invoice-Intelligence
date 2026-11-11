@@ -1,0 +1,42 @@
+{
+  "fixture": "REPLACE_ME.pdf",
+  "invoice_number": null,
+  "invoice_date": null,
+  "due_date": null,
+  "currency": null,
+  "seller": {
+    "name": null,
+    "address": null,
+    "tax_id": null,
+    "tax_scheme": null
+  },
+  "buyer": {
+    "name": null,
+    "address": null,
+    "tax_id": null,
+    "tax_scheme": null
+  },
+  "line_items": [
+    {
+      "description": null,
+      "hsn_sac": null,
+      "quantity": null,
+      "unit_price": null,
+      "amount": null
+    }
+  ],
+  "subtotal": null,
+  "tax_lines": [
+    {
+      "label": null,
+      "rate": null,
+      "amount": null
+    }
+  ],
+  "tax_total": null,
+  "adjustments": [],
+  "grand_total": null,
+  "expected_pages": {},
+  "expected_flags": [],
+  "notes": null
+}

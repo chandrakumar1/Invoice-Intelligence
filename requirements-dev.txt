@@ -1,0 +1,9 @@
+# What:     Development and test dependencies (runtime set included).
+# In:       pip install -r requirements-dev.txt
+# Out:      Runtime deps plus test tooling and the fixture generator's PDF library.
+# Fails if: reportlab changes its output between versions, so regenerated fixtures stop being byte-identical (the reason it's pinned).
+
+-r requirements.txt
+pytest==9.2.0
+httpx==0.28.1
+reportlab==5.1.0
