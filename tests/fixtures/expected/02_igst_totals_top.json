@@ -1,0 +1,60 @@
+{
+  "fixture": "02_igst_totals_top.pdf",
+  "invoice_number": "DPI-INV-2025-0932",
+  "invoice_date": "2025-11-11",
+  "due_date": "2025-12-11",
+  "currency": "INR",
+  "seller": {
+    "name": "Deccan Packaging Industries",
+    "address": "Gat No. 118, Chakan MIDC, Pune, Maharashtra 410501",
+    "tax_id": "27AAEFD5512Q1Z5",
+    "tax_scheme": "gstin"
+  },
+  "buyer": {
+    "name": "Nilgiri Foods Pvt. Ltd.",
+    "address": "14 Industrial Suburb, Yeshwanthpur, Bengaluru, Karnataka 560022",
+    "tax_id": "29AACCN6274H1Z5",
+    "tax_scheme": "gstin"
+  },
+  "line_items": [
+    {
+      "description": "Corrugated Box 5-Ply 18x12x12 in",
+      "hsn_sac": "4819",
+      "quantity": "1500",
+      "unit_price": "38.50",
+      "amount": "57750.00"
+    },
+    {
+      "description": "Corrugated Box 3-Ply 12x10x8 in",
+      "hsn_sac": "4819",
+      "quantity": "2500",
+      "unit_price": "17.25",
+      "amount": "43125.00"
+    },
+    {
+      "description": "BOPP Tape 48mm x 65m Brown",
+      "hsn_sac": "3919",
+      "quantity": "240",
+      "unit_price": "42.00",
+      "amount": "10080.00"
+    },
+    {
+      "description": "Stretch Wrap Film 23 Micron 500mm",
+      "hsn_sac": "3920",
+      "quantity": "60",
+      "unit_price": "690.00",
+      "amount": "41400.00"
+    }
+  ],
+  "subtotal": "152355.00",
+  "taxable_value": "152355.00",
+  "tax_lines": [
+    { "label": "IGST @ 18%", "rate": "18", "amount": "27423.90" }
+  ],
+  "tax_total": null,
+  "adjustments": [],
+  "grand_total": "179778.90",
+  "expected_flags": [],
+  "expected_pages": {},
+  "notes": "Place of supply: Karnataka (29). Amount Due box also shows INR 179,778.90."
+}

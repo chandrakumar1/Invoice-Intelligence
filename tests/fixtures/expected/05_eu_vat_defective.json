@@ -1,0 +1,64 @@
+{
+  "fixture": "05_eu_vat_defective.pdf",
+  "invoice_number": null,
+  "invoice_date": "2025-11-04",
+  "due_date": null,
+  "currency": "EUR",
+  "seller": {
+    "name": "Müller Bürobedarf GmbH",
+    "address": "Friedrichstraße 112 · 10117 Berlin · Germany",
+    "tax_id": "DE12345678",
+    "tax_scheme": "eu_vat"
+  },
+  "buyer": {
+    "name": "Van Dijk Design B.V.",
+    "address": "Keizersgracht 221 1016 DV Amsterdam, Netherlands",
+    "tax_id": "NL853746219B01",
+    "tax_scheme": "eu_vat"
+  },
+  "line_items": [
+    {
+      "description": "Desk Organizer Bamboo",
+      "hsn_sac": "BO-1101",
+      "quantity": "15",
+      "unit_price": "24.90",
+      "amount": "373.50"
+    },
+    {
+      "description": "Monitor Stand Aluminium",
+      "hsn_sac": "BO-2240",
+      "quantity": "8",
+      "unit_price": "59.00",
+      "amount": "472.00"
+    },
+    {
+      "description": "Document Tray A4 Black",
+      "hsn_sac": "BO-0315",
+      "quantity": "30",
+      "unit_price": "7.45",
+      "amount": "223.50"
+    },
+    {
+      "description": "Paper Shredder P-4 Cross Cut",
+      "hsn_sac": "BO-5502",
+      "quantity": "2",
+      "unit_price": "189.00",
+      "amount": "378.00"
+    }
+  ],
+  "subtotal": "1457.00",
+  "taxable_value": null,
+  "tax_lines": [
+    {
+      "label": "VAT 19%",
+      "rate": "19",
+      "amount": "276.83"
+    }
+  ],
+  "tax_total": null,
+  "adjustments": [],
+  "grand_total": "1733.83",
+  "expected_pages": {},
+  "expected_flags": ["line_items_sum_mismatch", "tax_id_invalid_format", "required_field_missing"],
+  "notes": "The sum of the line items amount is 1447.00 but it is printed as 1457.00 in pdf, and the taxable_value is null since there is no tax related word or any information written in the pdf,and the VAT ID DE12345678 is one digit short of the German format, transcribed as printed"
+}

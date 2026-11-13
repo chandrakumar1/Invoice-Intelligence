@@ -1,11 +1,12 @@
 """
-What:     Proves the committed fixture PDFs have the properties later milestones rely on, and that the generator is reproducible.
-In:       tests/fixtures/pdfs/*.pdf and scripts/generate_fixtures.py (run into a temp dir).
+What:     Proves the fixture PDFs have the properties later milestones rely on, the generator is reproducible, and expected files point at real PDFs.
+In:       tests/fixtures/pdfs/*.pdf, tests/fixtures/expected/*.json, and scripts/generate_fixtures.py (run into a temp dir).
 Out:      pytest pass/fail.
 Fails if: A dependency upgrade changes the generator's bytes; regenerate, re-check the PDFs by eye, and commit them.
 """
 
 import hashlib
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -52,6 +53,18 @@ def test_scanned_fixture_has_no_text_layer():
         page = pdf.pages[0]
         assert (page.extract_text() or "").strip() == ""
         assert len(page.images) == 1
+
+
+EXPECTED_FILES = sorted(p for p in (ROOT / "tests" / "fixtures" / "expected").glob("*.json") if not p.name.startswith("_"))
+FIXTURE_PDF_DIRS = [PDFS, ROOT / "tests" / "fixtures" / "private"]
+
+
+@pytest.mark.parametrize("path", EXPECTED_FILES, ids=lambda p: p.name)
+def test_expected_file_references_existing_pdf(path):
+    fixture = json.loads(path.read_text())["fixture"]
+    assert any((d / fixture).is_file() for d in FIXTURE_PDF_DIRS), f"{path.name}: no PDF named {fixture!r}"
+    # Naming convention from tests/fixtures/README.md: <pdf-stem>.json
+    assert Path(fixture).stem == path.stem, f"{path.name} should be named {Path(fixture).stem}.json"
 
 
 def test_generator_is_byte_identical(tmp_path):

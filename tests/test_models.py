@@ -14,6 +14,8 @@ import pytest
 from pydantic import ValidationError
 
 from app.models import (
+    Adjustment,
+    AdjustmentKind,
     ExactDecimal,
     ExpectedInvoice,
     Extracted,
@@ -51,7 +53,8 @@ def minimal_invoice() -> Invoice:
     return Invoice(
         invoice_number=Extracted[str](value="SOS/2025-26/0147", source=ref()),
         invoice_date=missing(), due_date=missing(), currency=missing(),
-        seller=party, buyer=party, line_items=[], subtotal=missing(), tax_lines=[],
+        seller=party, buyer=party, line_items=[], subtotal=missing(),
+        taxable_value=missing("no taxable value printed"), tax_lines=[],
         tax_total=missing(), adjustments=[], grand_total=missing(),
     )
 
@@ -169,6 +172,74 @@ def test_line_item_missing_cell_needs_reason():
     assert row_item(hsn_sac=None, cell_spans=spans, missing_reasons={"hsn_sac": "column not printed"})
 
 
+# --- taxable_value and adjustment labels -----------------------------------------------
+
+
+def test_taxable_value_is_required_in_output_but_may_be_missing_with_reason():
+    data = minimal_invoice().model_dump()
+    del data["taxable_value"]
+    with pytest.raises(ValidationError, match="taxable_value"):
+        Invoice.model_validate(data)
+    assert minimal_invoice().taxable_value.missing_reason == "no taxable value printed"
+
+
+def test_taxable_value_null_without_reason_rejected():
+    data = minimal_invoice().model_dump() | {"taxable_value": {"value": None}}
+    with pytest.raises(ValidationError, match="must have a missing_reason"):
+        Invoice.model_validate(data)
+
+
+def test_taxable_value_needs_provenance_and_serializes_as_string():
+    with pytest.raises(ValidationError, match="must carry a SourceRef"):
+        Invoice.model_validate(minimal_invoice().model_dump() | {"taxable_value": {"value": "563888.15"}})
+    inv = minimal_invoice().model_copy(
+        update={"taxable_value": Extracted[ExactDecimal](
+            value=Decimal("563888.15"), source=ref("Taxable Value 5,63,888.15", (14, 25)))}
+    )
+    dumped = json.loads(inv.model_dump_json())["taxable_value"]
+    assert dumped["value"] == "563888.15"
+    assert dumped["source"]["quote"] == "Taxable Value 5,63,888.15"
+
+
+def test_adjustment_label_keeps_printed_text_or_explains_absence():
+    amount = Extracted[ExactDecimal](value=Decimal("-0.01"), source=ref("Round Off -0.01", (10, 15)))
+    a = Adjustment(kind=AdjustmentKind.ROUND_OFF, amount=amount,
+                   label=Extracted[str](value="Round Off", source=ref("Round Off -0.01", (0, 9))))
+    assert a.label.value == "Round Off"
+    assert Adjustment(kind=AdjustmentKind.OTHER, amount=amount, label=missing("no label printed")).label.value is None
+    with pytest.raises(ValidationError, match="must have a missing_reason"):
+        Adjustment(kind=AdjustmentKind.OTHER, amount=amount, label=Extracted[str](value=None))
+
+
+def expected_template() -> dict:
+    return json.loads((EXPECTED_DIR / "_TEMPLATE.json").read_text())
+
+
+def test_expected_taxable_value_optional():
+    data = expected_template()
+    assert ExpectedInvoice.model_validate(data).taxable_value is None  # explicit null
+    del data["taxable_value"]
+    assert ExpectedInvoice.model_validate(data).taxable_value is None  # omitted = null
+    data["taxable_value"] = "563888.15"
+    assert ExpectedInvoice.model_validate(data).taxable_value == Decimal("563888.15")
+    data["taxable_value"] = 563888.15
+    with pytest.raises(ValidationError, match="not float"):
+        ExpectedInvoice.model_validate(data)
+
+
+@pytest.mark.parametrize(
+    "entry,label",
+    [
+        ({"kind": "round_off", "amount": "-0.01"}, None),  # label omitted
+        ({"kind": "round_off", "amount": "-0.01", "label": None}, None),  # explicit null
+        ({"kind": "discount", "amount": "-1500.00", "label": "Less: Trade Discount"}, "Less: Trade Discount"),
+    ],
+)
+def test_expected_adjustment_label_optional(entry, label):
+    data = expected_template() | {"adjustments": [entry]}
+    assert ExpectedInvoice.model_validate(data).adjustments[0].label == label
+
+
 # --- Wire schema (LLM output) ----------------------------------------------------------
 
 
@@ -188,7 +259,7 @@ def test_wire_field_defaults_line_end():
 def test_wire_schema_is_tool_ready():
     schema = LLMInvoiceExtraction.model_json_schema()
     assert schema["additionalProperties"] is False
-    assert {"invoice_number", "line_items", "grand_total"} <= set(schema["required"])
+    assert {"invoice_number", "line_items", "taxable_value", "grand_total"} <= set(schema["required"])
     json.dumps(schema)  # serializable, so it can be sent as a tool input_schema
 
 
@@ -243,6 +314,60 @@ def test_result_json_round_trip():
 @pytest.mark.parametrize("path", sorted(EXPECTED_DIR.glob("*.json")), ids=lambda p: p.name)
 def test_expected_files_match_contract(path):
     ExpectedInvoice.model_validate_json(path.read_text())
+
+
+def expected_with_pages(pages: dict) -> dict:
+    # Template has exactly one line item and one tax line, so index 0 is valid and 1 is not.
+    return expected_template() | {"expected_pages": pages}
+
+
+@pytest.mark.parametrize(
+    "key",
+    [
+        "invoice_number", "currency", "grand_total", "taxable_value",
+        "seller.name", "buyer.tax_id",
+        "line_items.0", "line_items.0.amount", "tax_lines.0",
+        "seller", "line_items",  # whole blocks are fine too
+    ],
+)
+def test_expected_pages_accepts_real_fields(key):
+    assert ExpectedInvoice.model_validate(expected_with_pages({key: 1})).expected_pages == {key: 1}
+
+
+@pytest.mark.parametrize(
+    "key",
+    [
+        "seler.name",  # misspelled parent
+        "invoice_no",  # misspelled field
+        "seller.gstin",  # field doesn't exist on the party
+        "line_items.1",  # past the end (one item)
+        "adjustments.0",  # template has no adjustments
+        "line_items.first",  # non-numeric index
+        "line_items.00",  # non-canonical index
+        "line_items.-1",  # negative index
+        "seller.name.first",  # descends into a string
+        "seller..name",  # empty segment
+        "",  # empty key
+        "notes",  # file metadata, not on any page
+        "fixture",
+    ],
+)
+def test_expected_pages_rejects_invalid_keys(key):
+    with pytest.raises(ValidationError, match="don't name a field or array position"):
+        ExpectedInvoice.model_validate(expected_with_pages({key: 1}))
+
+
+def test_expected_pages_error_lists_every_bad_key():
+    with pytest.raises(ValidationError) as err:
+        ExpectedInvoice.model_validate(expected_with_pages({"invoice_number": 1, "seler.name": 1, "line_items.9": 2}))
+    assert "seler.name" in str(err.value) and "line_items.9" in str(err.value)
+    assert "'invoice_number'" not in str(err.value)
+
+
+@pytest.mark.parametrize("page", [0, -1])
+def test_expected_pages_must_be_one_indexed(page):
+    with pytest.raises(ValidationError):
+        ExpectedInvoice.model_validate(expected_with_pages({"invoice_number": page}))
 
 
 def test_expected_rejects_float_amounts():

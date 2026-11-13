@@ -26,6 +26,7 @@
     }
   ],
   "subtotal": null,
+  "taxable_value": null,
   "tax_lines": [
     {
       "label": null,

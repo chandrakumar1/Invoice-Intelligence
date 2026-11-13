@@ -34,6 +34,18 @@ The repo is a portfolio piece that clients read before hiring, so clarity beats 
    justification in README. Prefer the stdlib (e.g. `difflib` over rapidfuzz). Ask before adding one.
 
 ## Conventions
+- Every extracted value is a slice of the page text. The LLM's `value_text` only locates it.
+- LLM provider is chosen by `LLM_PROVIDER`: **`gemini` (default, free tier)** or `anthropic`. Both get the same
+  prompt and the same wire schema; only `app/gemini.py` / `AnthropicClient` differ. Every result records
+  `provider` and `model`.
+  - Gemini: `gemini-3.5-flash-lite` (2.5 models are closed to new projects), `generateContent` (still fully
+    supported; the newer Interactions API is only Google's recommendation), `responseSchema` converted from the
+    Pydantic wire schema, plain REST over httpx, no `temperature` (Google: keep the default on Gemini 3),
+    429/5xx backoff, no retry on a daily quota.
+  - Anthropic: `claude-opus-5-5`, effort `medium`, server-side refusal fallback **off** (owner's decision; a
+    refusal raises `LLMRefusalError`). No `temperature`, no forced `tool_choice` (both rejected by this model).
+- **Never send real invoices (`tests/fixtures/private/`) through the Gemini free tier.** Google may use free-tier
+  prompts and answers to improve its products, and human reviewers may read them. Synthetic fixtures only.
 - Money is `Decimal`, serialized to JSON as **strings**. Never `float`.
 - Pages and lines are **1-indexed**.
 - Functions that depend on "today" take a `today: date` parameter (no hidden clock).
@@ -49,17 +61,22 @@ types, job queues (FastAPI `BackgroundTasks` is the ceiling), and frontend frame
 ## Layout
 ```
 app/models.py       Pydantic contract (wire + domain + flags + result envelope + ground-truth format)
-app/extract.py      PDF -> line-numbered page text (pdfplumber; Tesseract OCR fallback per page)   [M2]
-app/llm.py          Anthropic tool-use call behind a Protocol (mockable)                           [M3]
-app/parse.py        Deterministic parsing of amounts / dates / tax IDs                             [M3]
-app/provenance.py   Quote verification + deterministic confidence                                  [M3]
-app/validate.py     Business checks -> ValidationFlag list                                         [M4]
-app/pipeline.py     run(pdf_bytes) -> ExtractionResult                                             [M5]
-app/storage.py      JSON files under DATA_DIR                                                      [M5]
-app/main.py         FastAPI: POST /extract (202), GET /result/{id}                                 [M5]
-static/review.html  Vanilla JS review UI                                                           [M6]
+app/extract.py      PDF -> line-numbered page text (pdfplumber; Tesseract OCR fallback per page)   [M2 done]
+app/llm.py          LLMClient Protocol, provider choice, Claude client, one repair round            [M3 done]
+app/gemini.py       Gemini adapter: responseSchema, REST over httpx, rate-limit backoff             [done]
+app/prompts/        Versioned system prompts (extract_v1.md); bump the version on any edit          [M3 done]
+app/parse.py        Deterministic parsing of amounts / dates / rates / currency / tax schemes      [M3 done]
+app/provenance.py   Citation verification, verbatim quotes, deterministic confidence               [M3 done]
+app/assemble.py     Wire output -> typed Invoice: locate, derive document hints, parse             [M3 done]
+app/validate.py     Business checks -> ValidationFlag list (tolerance table in the docstring)    [M4 done]
+app/pipeline.py     new_job() + process(): one document end to end; failures become FAILED results [M5 done]
+app/storage.py      uploads/{id}.pdf + results/{id}.json under DATA_DIR, atomic writes             [M5 done]
+app/main.py         FastAPI factory: POST /extract (202 + BackgroundTasks), GET /result/{id}       [M5 done]
+static/review.html  Review page (markup + CSS), served at GET / with a strict CSP                 [M6 done]
+static/review.js    Review logic; document text only via textContent (it's untrusted)            [M6 done]
 scripts/generate_fixtures.py   Deterministic synthetic invoice PDFs
-scripts/evaluate.py            Accuracy harness                                                    [M7]
+scripts/evaluate.py            Accuracy harness: real pipeline, per-field outcomes, calibration    [M7 done]
+                               Its score_invoice() is the only definition of "correct" (tests use it too)
 tests/fixtures/pdfs/           Generated PDFs (committed)
 tests/fixtures/expected/       Hand-written ground truth (owner only)
 tests/fixtures/private/        Real invoices, gitignored (PII)
@@ -70,6 +87,9 @@ tests/fixtures/private/        Real invoices, gitignored (PII)
 python -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
 .venv/bin/python scripts/generate_fixtures.py     # regenerate fixture PDFs (byte-identical)
 .venv/bin/pytest
+RUN_LIVE_TESTS=1 .venv/bin/pytest -m live         # real API call via LLM_PROVIDER; opt-in only
+.venv/bin/python scripts/evaluate.py              # live accuracy run on all fixtures -> data/eval/<timestamp>/
+.venv/bin/uvicorn app.main:create_app --factory   # API + review page on :8000 (each upload is an LLM API call)
 ```
 Tested on Python 3.14.3 (macOS x86_64): all dependencies install from prebuilt wheels.
 OCR (from M2) also needs the Tesseract binary: `brew install tesseract`.

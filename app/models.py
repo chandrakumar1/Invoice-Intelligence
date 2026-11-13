@@ -127,6 +127,10 @@ class LLMInvoiceExtraction(_Strict):
     buyer: WireParty
     line_items: list[WireLineItem]
     subtotal: WireField = Field(description="Only if printed. Never computed from the line items.")
+    taxable_value: WireField = Field(
+        description="The amount tax is charged on, only if printed with its own label (e.g. 'Taxable Value'). "
+        "Never computed, e.g. as subtotal minus discount."
+    )
     tax_lines: list[WireTaxLine]
     tax_total: WireField = Field(description="Only if printed. Never computed from the tax lines.")
     adjustments: list[WireAdjustment]
@@ -276,7 +280,7 @@ class AdjustmentKind(StrEnum):
 
 class Adjustment(_Strict):
     kind: AdjustmentKind
-    label: Extracted[str]
+    label: Extracted[str] = Field(description="The label exactly as printed, e.g. 'Less: Trade Discount'.")
     amount: Extracted[ExactDecimal] = Field(
         description="Signed effect on the grand total (a discount is negative). Sign applied by Python."
     )
@@ -291,6 +295,9 @@ class Invoice(_Strict):
     buyer: Party
     line_items: list[LineItem]
     subtotal: Extracted[ExactDecimal]
+    taxable_value: Extracted[ExactDecimal] = Field(
+        description="Printed tax base. When not printed: value None with a missing_reason, never derived."
+    )
     tax_lines: list[TaxLine]
     tax_total: Extracted[ExactDecimal]
     adjustments: list[Adjustment]
@@ -312,6 +319,7 @@ class FlagCode(StrEnum):
     LINE_AMOUNT_MISMATCH = "line_amount_mismatch"  # qty x unit_price != amount
     LINE_ITEMS_SUM_MISMATCH = "line_items_sum_mismatch"  # sum(line amounts) != subtotal
     TAX_LINES_SUM_MISMATCH = "tax_lines_sum_mismatch"  # sum(tax lines) != tax_total
+    TAX_AMOUNT_MISMATCH = "tax_amount_mismatch"  # taxable_value x rate != printed tax amount
     TOTALS_MISMATCH = "totals_mismatch"  # subtotal + tax + adjustments != grand_total
     DATE_UNPARSEABLE = "date_unparseable"
     DATE_AMBIGUOUS = "date_ambiguous"  # e.g. 03/04/2025 with no locale signal
@@ -344,14 +352,26 @@ class PageInfo(_Strict):
     ocr_reasons: list[str] = Field(description="Which heuristics sent this page to OCR; empty for text_layer.")
     char_count: int = Field(ge=0)
     ocr_mean_conf: float | None = Field(default=None, ge=0.0, le=100.0)
-    text: str = Field(description="Canonical page text that every quote on this page is verified against.")
+    ocr_line_conf: list[Annotated[float, Field(ge=0.0, le=100.0)]] | None = Field(
+        default=None, description="OCR pages only: mean Tesseract confidence of each line, aligned with `lines`."
+    )
+    text: str = Field(
+        description="Canonical page text that every quote on this page is verified against. "
+        "Lines are separated by '\\n'; line k (1-indexed) is lines[k-1]."
+    )
+
+    @property
+    def lines(self) -> list[str]:
+        return self.text.split("\n") if self.text else []
 
     @model_validator(mode="after")
     def _ocr_fields_match_source(self) -> Self:
         if self.text_source == "ocr":
-            if self.ocr_mean_conf is None or not self.ocr_reasons:
-                raise ValueError("OCR pages need ocr_mean_conf and at least one ocr_reason")
-        elif self.ocr_mean_conf is not None or self.ocr_reasons:
+            if self.ocr_mean_conf is None or self.ocr_line_conf is None or not self.ocr_reasons:
+                raise ValueError("OCR pages need ocr_mean_conf, ocr_line_conf and at least one ocr_reason")
+            if len(self.ocr_line_conf) != len(self.lines):
+                raise ValueError(f"ocr_line_conf has {len(self.ocr_line_conf)} entries for {len(self.lines)} lines")
+        elif self.ocr_mean_conf is not None or self.ocr_line_conf is not None or self.ocr_reasons:
             raise ValueError("text_layer pages cannot have OCR fields")
         return self
 
@@ -369,6 +389,7 @@ class ExtractionResult(_Strict):
     filename: str
     sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     created_at: datetime
+    provider: str | None = None  # which LLM provider answered: "gemini", "anthropic", ...
     model: str | None = None
     prompt_version: str | None = None
     pipeline_version: str
@@ -387,11 +408,21 @@ class ExtractionResult(_Strict):
         return self
 
 
+class ExtractAccepted(_Strict):
+    """POST /extract response: the job was accepted and will be processed in the background."""
+
+    id: str
+    status: JobStatus
+    result_url: str = Field(description="Poll this until status is done or failed.")
+
+
 # --------------------------------------------------------------------------------------
 # Ground-truth format (hand-written files in tests/fixtures/expected/)
 # --------------------------------------------------------------------------------------
 # Every key is required, so the author decides on each field explicitly. `null` means
 # "not printed on this document". Decimals must be JSON strings ("1234.50"), dates ISO.
+# Exception: fields added after files were already written (`taxable_value`,
+# `adjustments[].label`) are optional. Omitting them means the same as null.
 
 
 class ExpectedParty(_Strict):
@@ -418,6 +449,7 @@ class ExpectedTaxLine(_Strict):
 class ExpectedAdjustment(_Strict):
     kind: AdjustmentKind
     amount: ExactDecimal  # signed, as in Adjustment
+    label: str | None = None  # exactly as printed, e.g. "Round Off"
 
 
 class ExpectedInvoice(_Strict):
@@ -430,10 +462,47 @@ class ExpectedInvoice(_Strict):
     buyer: ExpectedParty
     line_items: list[ExpectedLineItem]
     subtotal: ExactDecimal | None
+    taxable_value: ExactDecimal | None = None
     tax_lines: list[ExpectedTaxLine]
     tax_total: ExactDecimal | None
     adjustments: list[ExpectedAdjustment]
     grand_total: ExactDecimal | None
-    expected_pages: dict[str, int] = Field(description="Field path -> page it appears on, e.g. {'grand_total': 2}.")
+    expected_pages: dict[str, Annotated[int, Field(ge=1)]] = Field(
+        description="Field path -> page it appears on, e.g. {'grand_total': 2, 'line_items.0': 1}."
+    )
     expected_flags: list[FlagCode] = Field(description="Flags validation should raise for this document.")
     notes: str | None = Field(description="Free text for the author: quirks, judgment calls.")
+
+    @model_validator(mode="after")
+    def _expected_pages_name_real_fields(self) -> Self:
+        bad = [path for path in self.expected_pages if not self._resolves(path)]
+        if bad:
+            raise ValueError(f"expected_pages keys that don't name a field or array position in this file: {bad}")
+        return self
+
+    def _resolves(self, path: str) -> bool:
+        """True if `path` (e.g. 'seller.tax_id', 'line_items.29') walks to something in this file.
+
+        Field names must exist on the model at each level. Array indexes must be canonical
+        (no leading zeros) and within the list. Metadata keys have no page, so they never resolve.
+        """
+        parts = path.split(".")
+        if parts[0] in _NOT_ON_PAGE:
+            return False
+        node: object = self
+        for part in parts:
+            if isinstance(node, list):
+                if not part.isdigit() or str(int(part)) != part or int(part) >= len(node):
+                    return False
+                node = node[int(part)]
+            elif isinstance(node, BaseModel):
+                if part not in type(node).model_fields:
+                    return False
+                node = getattr(node, part)
+            else:  # a leaf value; nothing to descend into
+                return False
+        return True
+
+
+# Fields of ExpectedInvoice that describe the file, not the document, so they have no page.
+_NOT_ON_PAGE = frozenset({"fixture", "expected_pages", "expected_flags", "notes"})

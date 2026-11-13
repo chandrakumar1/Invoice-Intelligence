@@ -1,0 +1,118 @@
+<!doctype html>
+<!--
+What:     Single-page review UI: each extracted value beside its source quote, lowest confidence first, problems in red/amber.
+In:       Served at GET /; loads /static/review.js, which reads ?id=<job id> or offers an upload form.
+Out:      A page a human uses to verify an extraction, not trust it.
+Fails if: Opened as a local file instead of through the server: the fetch calls to /extract and /result need the API.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Invoice Review</title>
+<style>
+  :root {
+    --bg: #f7f7f5; --panel: #ffffff; --text: #1d1d1b; --muted: #6b6b66; --border: #e2e1dc;
+    --mark: #fff1a8; --error: #b42318; --error-bg: #fdecea; --warning: #9a5b00; --warning-bg: #fff4e0;
+    --ok: #1f7a3d; --bar: #3d6fb6; --code-bg: #f2f1ec;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161614; --panel: #1f1f1c; --text: #ecebe6; --muted: #a09f98; --border: #34332f;
+      --mark: #5c4f10; --error: #ff8a80; --error-bg: #3a1a17; --warning: #ffc266; --warning-bg: #352812;
+      --ok: #7ed39a; --bar: #7aa7e6; --code-bg: #262622;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1200px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 15px; margin: 28px 0 8px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+  .meta { color: var(--muted); font-size: 13px; }
+  .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--code-bg); }
+  .pill.done { color: var(--ok); } .pill.failed { color: var(--error); background: var(--error-bg); }
+  .status { margin: 16px 0; padding: 10px 14px; border-radius: 8px; background: var(--code-bg); }
+  .status.error { color: var(--error); background: var(--error-bg); } .status.warning { color: var(--warning); background: var(--warning-bg); }
+  form { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  button { font: inherit; padding: 6px 16px; border-radius: 6px; border: 1px solid var(--border); background: var(--text); color: var(--bg); cursor: pointer; }
+  button:disabled { opacity: .5; cursor: wait; }
+  #summary { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+  .stat { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; }
+  .stat strong { font-size: 18px; }
+  .stat.error { border-color: var(--error); color: var(--error); } .stat.warning { border-color: var(--warning); color: var(--warning); }
+  #flags { list-style: none; margin: 0; padding: 0; }
+  #flags li { padding: 8px 12px; border-left: 4px solid var(--border); background: var(--panel); margin-bottom: 6px; border-radius: 4px; }
+  #flags li.error { border-left-color: var(--error); color: var(--error); background: var(--error-bg); }
+  #flags li.warning { border-left-color: var(--warning); color: var(--warning); background: var(--warning-bg); }
+  #flags li.ok { border-left-color: var(--ok); color: var(--ok); }
+  .paths { color: var(--muted); font-size: 12px; }
+  .badge { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; padding: 0 6px; border-radius: 4px; margin-left: 6px; vertical-align: 1px; }
+  .badge.error { background: var(--error); color: var(--panel); } .badge.warning { background: var(--warning); color: var(--panel); }
+  .badge.muted { background: var(--code-bg); color: var(--muted); font-weight: 600; }
+  #flags .badge { margin: 0 6px 0 0; }
+  .table-wrap { overflow-x: auto; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; }
+  table { border-collapse: collapse; width: 100%; min-width: 760px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  thead th { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  tbody th { font-weight: 600; width: 20%; }
+  tr.error { background: var(--error-bg); } tr.error th, tr.error .value { color: var(--error); }
+  tr.warning { background: var(--warning-bg); }
+  tr.error th:first-child, tr.warning th:first-child { box-shadow: inset 4px 0 0 var(--error); }
+  tr.warning th:first-child { box-shadow: inset 4px 0 0 var(--warning); }
+  .value { width: 26%; overflow-wrap: anywhere; white-space: pre-line; }
+  .missing { color: var(--muted); }
+  .reason { color: var(--muted); font-size: 12px; font-style: italic; margin-top: 2px; }
+  .quote pre, .page-text { margin: 0; font: 13px/1.45 ui-monospace, "SF Mono", Menlo, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--code-bg); padding: 6px 8px; border-radius: 4px; }
+  mark { background: var(--mark); color: inherit; border-radius: 2px; padding: 0 1px; }
+  .where { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .conf { width: 90px; font-variant-numeric: tabular-nums; }
+  .conf.low { color: var(--warning); font-weight: 700; }
+  .bar { height: 4px; background: var(--code-bg); border-radius: 2px; margin-top: 4px; }
+  .bar div { height: 100%; background: var(--bar); border-radius: 2px; }
+  .conf.low .bar div { background: var(--warning); }
+  details { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; }
+  summary { cursor: pointer; font-weight: 600; }
+  details .page-text { margin-top: 8px; }
+  .ln { color: var(--muted); user-select: none; }
+</style>
+</head>
+<body>
+<main>
+  <section id="upload" class="panel">
+    <h1>Invoice review</h1>
+    <p class="meta">Upload a PDF invoice. Every extracted value is shown beside the exact text it came from, so you can verify it.</p>
+    <form id="upload-form">
+      <input id="file" type="file" accept="application/pdf,.pdf" required>
+      <button id="upload-button" type="submit">Extract</button>
+    </form>
+  </section>
+
+  <header id="doc-header" hidden>
+    <h1 id="doc-title"></h1>
+    <div id="doc-meta" class="meta"></div>
+  </header>
+
+  <div id="status" class="status" role="status" aria-live="polite" hidden></div>
+
+  <section id="review" hidden>
+    <div id="summary"></div>
+    <h2>Validation</h2>
+    <ul id="flags"></ul>
+    <h2>Extracted values <span class="meta">(lowest confidence first)</span></h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th scope="col">Field</th><th scope="col">Value</th><th scope="col">Source quote</th><th scope="col">Confidence</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="pages-section" hidden>
+    <h2>Document text</h2>
+    <div id="pages"></div>
+  </section>
+</main>
+<script src="/static/review.js"></script>
+</body>
+</html>

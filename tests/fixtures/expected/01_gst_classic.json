@@ -1,0 +1,67 @@
+{
+  "fixture": "01_gst_classic.pdf",
+  "invoice_number": "SOS/2025-26/0147",
+  "invoice_date": "2025-11-05",
+  "due_date": "2025-11-20",
+  "currency": "INR",
+  "seller": {
+    "name": "Sharma Office Supplies Pvt. Ltd.",
+    "address": "No. 42, 3rd Cross, Indiranagar, Bengaluru, Karnataka 560038",
+    "tax_id": "29AAGCS4821K1Z0",
+    "tax_scheme": "gstin"
+  },
+  "buyer": {
+    "name": "Kaveri Software Solutions LLP",
+    "address": "Plot 17, Electronic City Phase 1, Bengaluru, Karnataka 560100",
+    "tax_id": "29AAKFK7730M1ZO",
+    "tax_scheme": "gstin"
+  },
+  "line_items": [
+    {
+      "description": "A4 Copier Paper 75 GSM (500 sheets)",
+      "hsn_sac": "4802",
+      "quantity": "40",
+      "unit_price": "285.00",
+      "amount": "11400.00"
+    },
+    {
+      "description": "Ball Pen Blue (Box of 50)",
+      "hsn_sac": "9608",
+      "quantity": "12",
+      "unit_price": "410.00",
+      "amount": "4920.00"
+    },
+    {
+      "description": "Stapler Heavy Duty HD-45",
+      "hsn_sac": "8472",
+      "quantity": "5",
+      "unit_price": "1250.00",
+      "amount": "6250.00"
+    },
+    {
+      "description": "Whiteboard Marker Assorted (Pack of 10)",
+      "hsn_sac": "9608",
+      "quantity": "20",
+      "unit_price": "365.00",
+      "amount": "7300.00"
+    },
+    {
+      "description": "Ergonomic Office Chair Model EC-220",
+      "hsn_sac": "9401",
+      "quantity": "3",
+      "unit_price": "12499.00",
+      "amount": "37497.00"
+    }
+  ],
+  "subtotal": "67367.00",
+  "tax_lines": [
+  { "label": "CGST @ 9%", "rate": "9", "amount": "6063.03" },
+  { "label": "SGST @ 9%", "rate": "9", "amount": "6063.03" }
+],
+  "tax_total": null,
+  "adjustments": [],
+  "grand_total": "79493.06",
+  "expected_flags": [],
+  "expected_pages": {},
+  "notes": "Place of Supply: Karnataka (29)"
+}

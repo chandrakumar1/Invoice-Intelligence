@@ -1,0 +1,64 @@
+{
+  "fixture": "04_scanned_rotated.pdf",
+  "invoice_number": "YT/2025/1188",
+  "invoice_date": "2025-11-03",
+  "due_date": "2025-11-18",
+  "currency": "INR",
+  "seller": {
+    "name": "Yamuna Traders",
+    "address": "B-14, Okhla Industrial Area Phase II New Delhi, Delhi 110020",
+    "tax_id": "07AAHFY2206P1ZS",
+    "tax_scheme": "gstin"
+  },
+  "buyer": {
+    "name": "Lotus Interiors",
+    "address": "C-5, Sector 18 Noida, Uttar Pradesh 201301",
+    "tax_id": "09ABCFL6640R1ZM",
+    "tax_scheme": "gstin"
+  },
+  "line_items": [
+    {
+      "description": "Commercial Plywood 18mm 8x4 ft",
+      "hsn_sac": "4412",
+      "quantity": "25",
+      "unit_price": "2150.00",
+      "amount": "53750.00"
+    },
+    {
+      "description": "Laminate Sheet 1mm Walnut Matte",
+      "hsn_sac": "4823",
+      "quantity": "18",
+      "unit_price": "1140.00",
+      "amount": "20520.00"
+    },
+    {
+      "description": "Edge Banding Tape 22mm (50 m roll)",
+      "hsn_sac": "3921",
+      "quantity": "10",
+      "unit_price": "480.00",
+      "amount": "4800.00"
+    },
+    {
+      "description": "Wood Adhesive 5 kg",
+      "hsn_sac": "3506",
+      "quantity": "6",
+      "unit_price": "1325.00",
+      "amount": "7950.00"
+    }
+  ],
+  "subtotal": "87020.00",
+  "taxable_value": null,
+  "tax_lines": [
+    {
+      "label": "IGST @ 18%",
+      "rate": "18",
+      "amount": "15663.60"
+    }
+  ],
+  "tax_total": null,
+  "adjustments": [],
+  "grand_total": "102683.60",
+  "expected_pages": {},
+  "expected_flags": [],
+  "notes": "the scanned image is bit rotated, the text are are rotated at same angle"
+}

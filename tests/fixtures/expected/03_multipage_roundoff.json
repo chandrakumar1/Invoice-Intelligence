@@ -1,0 +1,294 @@
+{
+  "fixture": "03_multipage_roundoff.pdf",
+  "invoice_number":"GEH/1124/2025",
+  "invoice_date": "2025-11-07",
+  "due_date": "2025-12-07",
+  "currency": "INR",
+  "seller": {
+    "name": "Ganga Electricals & Hardware",
+    "address": "21, Ganesh Peth, Nagpur, Maharashtra 440018",
+    "tax_id": "27AAJFG3398C1ZA",
+    "tax_scheme": "gstin"
+  },
+  "buyer": {
+    "name": "Vidarbha Construction Co.",
+    "address": "Near Zero Mile, Civil Lines Nagpur, Maharashtra 440001",
+    "tax_id": "27AAAFV8817D1Z4",
+    "tax_scheme": "gstin"
+  },
+  "line_items": [
+    {
+      "description": "Modular Switch 6A 1-Way",
+      "hsn_sac": "8536",
+      "quantity": "50",
+      "unit_price": "231.79",
+      "amount": "11589.50"
+    },
+    {
+      "description": "Modular Socket 6A 3-Pin",
+      "hsn_sac": "8536",
+      "quantity": "25",
+      "unit_price": "2497.19",
+      "amount": "62429.75"
+    },
+    {
+      "description": "MCB 16A Single Pole C-Curve",
+      "hsn_sac": "8536",
+      "quantity": "5",
+      "unit_price": "1402.49",
+      "amount": "7012.45"
+    },
+    {
+      "description": "MCB 32A Double Pole C-Curve",
+      "hsn_sac": "8536",
+      "quantity": "2",
+      "unit_price": "988.23",
+      "amount": "1976.46"
+    },
+    {
+      "description": "RCCB 40A 4-Pole 30mA",
+      "hsn_sac": "8536",
+      "quantity": "20",
+      "unit_price": "1508.45",
+      "amount": "30169.00"
+    },
+    {
+      "description": "Distribution Board 8-Way SPN",
+      "hsn_sac": "8537",
+      "quantity": "6",
+      "unit_price": "187.45",
+      "amount": "1124.70"
+    },
+    {
+      "description": "FR PVC Wire 1.5 sq mm (90 m)",
+      "hsn_sac": "8544",
+      "quantity": "20",
+      "unit_price": "1065.86",
+      "amount": "21317.20"
+    },
+    {
+      "description": "FR PVC Wire 2.5 sq mm (90 m)",
+      "hsn_sac": "8544",
+      "quantity": "4",
+      "unit_price": "128.64",
+      "amount": "514.56"
+    },
+    {
+      "description": "FR PVC Wire 4.0 sq mm (90 m)",
+      "hsn_sac": "8544",
+      "quantity": "4",
+      "unit_price": "2026.35",
+      "amount": "8105.40"
+    },
+    {
+      "description": "Armoured Cable 4C x 16 sq mm (per m)",
+      "hsn_sac": "8544",
+      "quantity": "6",
+      "unit_price": "999.43",
+      "amount": "5996.58"
+    },
+    {
+      "description": "LED Bulb 9W Cool Daylight",
+      "hsn_sac": "8539",
+      "quantity": "4",
+      "unit_price": "1093.46",
+      "amount": "4373.84"
+    },
+    {
+      "description": "LED Batten 20W 4 ft",
+      "hsn_sac": "9405",
+      "quantity": "2",
+      "unit_price": "1620.44",
+      "amount": "3240.88"
+    },
+    {
+      "description": "LED Panel 15W Round Recessed",
+      "hsn_sac": "9405",
+      "quantity": "2",
+      "unit_price": "1466.65",
+      "amount": "2933.30"
+    },
+    {
+      "description": "LED Flood Light 50W IP65",
+      "hsn_sac": "9405",
+      "quantity": "50",
+      "unit_price": "190.16",
+      "amount": "9508.00"
+    },
+    {
+      "description": "Ceiling Fan 1200mm White",
+      "hsn_sac": "8414",
+      "quantity": "6",
+      "unit_price": "2032.65",
+      "amount": "12195.90"
+    },
+    {
+      "description": "Exhaust Fan 250mm",
+      "hsn_sac": "8414",
+      "quantity": "6",
+      "unit_price": "84.79",
+      "amount": "508.74"
+    },
+    {
+      "description": "PVC Conduit Pipe 25mm (3 m)",
+      "hsn_sac": "3917",
+      "quantity": "6",
+      "unit_price": "2075.64",
+      "amount": "12453.84"
+    },
+    {
+      "description": "PVC Conduit Bend 25mm",
+      "hsn_sac": "3917",
+      "quantity": "20",
+      "unit_price": "2430.08",
+      "amount": "48601.60"
+    },
+    {
+      "description": "Junction Box 4-Way 25mm",
+      "hsn_sac": "3925",
+      "quantity": "25",
+      "unit_price": "944.22",
+      "amount": "23605.50"
+    },
+    {
+      "description": "Modular Plate 8M White",
+      "hsn_sac": "3925",
+      "quantity": "50",
+      "unit_price": "2406.21",
+      "amount": "120310.50"
+    },
+    {
+      "description": "Metal Box 8M Concealed",
+      "hsn_sac": "7326",
+      "quantity": "2",
+      "unit_price": "1576.51",
+      "amount": "3153.02"
+    },
+    {
+      "description": "Earthing Electrode Copper Bonded 3 m",
+      "hsn_sac": "8536",
+      "quantity": "4",
+      "unit_price": "1446.65",
+      "amount": "5786.60"
+    },
+    {
+      "description": "Cable Tie 200mm (Pack of 100)",
+      "hsn_sac": "3926",
+      "quantity": "6",
+      "unit_price": "560.72",
+      "amount": "3364.32"
+    },
+    {
+      "description": "Insulation Tape 18mm Black",
+      "hsn_sac": "3919",
+      "quantity": "4",
+      "unit_price": "653.19",
+      "amount": "2612.76"
+    },
+    {
+      "description": "Screw Self-Tapping 25mm (Box of 200)",
+      "hsn_sac": "7318",
+      "quantity": "100",
+      "unit_price": "99.89",
+      "amount": "9989.00"
+    },
+    {
+      "description": "Rawl Plug 6mm (Pack of 100)",
+      "hsn_sac": "3926",
+      "quantity": "4",
+      "unit_price": "2071.40",
+      "amount": "8285.60"
+    },
+    {
+      "description": "Changeover Switch 63A 4-Pole",
+      "hsn_sac": "8536",
+      "quantity": "5",
+      "unit_price": "1463.93",
+      "amount": "7319.65"
+    },
+    {
+      "description": "Doorbell Ding-Dong 230V",
+      "hsn_sac": "8531",
+      "quantity": "12",
+      "unit_price": "242.00",
+      "amount": "2904.00"
+    },
+    {
+      "description": "Industrial Socket 32A 5-Pin IP44",
+      "hsn_sac": "8536",
+      "quantity": "100",
+      "unit_price": "1222.48",
+      "amount": "122248.00"
+    },
+    {
+      "description": "Copper Lug 16 sq mm (Pack of 50)",
+      "hsn_sac": "8536",
+      "quantity": "10",
+      "unit_price": "1175.75",
+      "amount": "11757.50"
+    }
+  ],
+  "subtotal": "565388.15",
+  "taxable_value": "563888.15",
+  "tax_lines": [
+    { "label": "CGST @ 9%", "rate": "9", "amount": "50749.93" },
+    { "label": "SGST @ 9%", "rate": "9", "amount": "50749.93" }
+  ],
+  "tax_total": null,
+  "adjustments": [
+    { "kind": "discount", "amount": "-1500.00", "label": "Less: Trade Discount" },
+    { "kind": "round_off", "amount": "-0.01", "label": "Round Off" }
+  ],
+  "grand_total": "665388.00",
+  "expected_pages": {
+    "invoice_number": 1,
+    "invoice_date": 1,
+    "due_date": 1,
+    "seller.name": 1,
+    "seller.address": 1,
+    "seller.tax_id": 1,
+    "buyer.name": 1,
+    "buyer.address": 1,
+    "buyer.tax_id": 1,
+    "line_items.0": 1,
+    "line_items.1": 1,
+    "line_items.2": 1,
+    "line_items.3": 1,
+    "line_items.4": 1,
+    "line_items.5": 1,
+    "line_items.6": 1,
+    "line_items.7": 1,
+    "line_items.8": 1,
+    "line_items.9": 1,
+    "line_items.10": 1,
+    "line_items.11": 1,
+    "line_items.12": 1,
+    "line_items.13": 1,
+    "line_items.14": 1,
+    "line_items.15": 1,
+    "line_items.16": 1,
+    "line_items.17": 1,
+    "line_items.18": 1,
+    "line_items.19": 1,
+    "line_items.20": 1,
+    "line_items.21": 1,
+    "line_items.22": 1,
+    "line_items.23": 1,
+    "line_items.24": 1,
+    "line_items.25": 1,
+    "line_items.26": 2,
+    "line_items.27": 2,
+    "line_items.28": 2,
+    "line_items.29": 2,
+    "currency": 2,
+    "subtotal": 2,
+    "taxable_value": 2,
+    "tax_lines.0": 2,
+    "tax_lines.1": 2,
+    "adjustments.0": 2,
+    "adjustments.1": 2,
+    "grand_total": 2
+  },
+  "expected_flags": [],
+  "notes": "tax_total is null because no combined tax total is printed; the invoice shows only separate CGST @ 9% and SGST @ 9% lines."
+}

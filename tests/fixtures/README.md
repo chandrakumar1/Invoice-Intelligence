@@ -37,9 +37,17 @@ Fails if: An expected file is written from generator data or LLM output instead 
    - `tax_scheme`: `"gstin"`, `"eu_vat"`, `"other"`, `"unknown"`.
    - `adjustments[].kind`: `"discount"`, `"shipping"`, `"round_off"`, `"other"`. `amount` is **signed** by
      its effect on the total (a discount of 500 is `"-500.00"`).
+   - `adjustments[].label` (optional): the label exactly as printed, e.g. `"Less: Trade Discount"`.
+   - `taxable_value` (optional): only if a tax base is printed with its own label (e.g. "Taxable Value").
+     Never derive it (e.g. subtotal minus discount). If it isn't printed, use `null` or leave the key out.
    - `tax_lines[].rate` is a percent: `"9"` for 9%.
-   - `address`: copy as printed. Line breaks become a single space when compared.
-   - `expected_pages`: optional map from field path to page, e.g. `{"grand_total": 2, "line_items.29": 2}`.
+   - `address`: the postal address only. The tax ID goes in `tax_id`, not here. When compared, runs of
+     commas and whitespace count as one separator, so a line break may be written as a space or as ", ".
+   - `subtotal`: the printed pre-tax total of the items. If the only such total is labelled "Taxable Value"
+     (no discount), it is both `subtotal` and `taxable_value` (as in 02).
+   - `expected_pages`: map from field path to page, e.g. `{"grand_total": 2, "line_items.29": 2}`.
+     Every key is checked when the file loads. It must name a field in this format, with array indexes
+     inside the list (0-based). Misspelled keys, out-of-range indexes, and metadata keys (`notes`, `fixture`) are rejected.
    - `expected_flags`: the `FlagCode` values validation should raise (see `app/models.py`), e.g.
      `["line_items_sum_mismatch", "tax_id_invalid_format", "required_field_missing"]`.
    - `notes`: anything a future reader should know ("Round Off is printed as R/O").

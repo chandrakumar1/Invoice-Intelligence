@@ -1,6 +1,7 @@
 # What:     Tells git which files to treat as binary.
 # In:       Paths git would otherwise auto-detect.
-# Out:      PDFs are never diffed or line-ending-converted.
-# Fails if: A new binary fixture type (e.g. .png, .tiff) is added without a line here, so its diffs show up as text noise.
+# Out:      PDFs and PNGs are never diffed or line-ending-converted.
+# Fails if: A new binary file type (e.g. .tiff) is added without a line here, so its diffs show up as text noise.
 
 *.pdf binary
+*.png binary
