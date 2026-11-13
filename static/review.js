@@ -154,6 +154,15 @@ function summarize(rows, flags) {
 // DOM
 // ---------------------------------------------------------------------------------------------
 
+/**
+ * Flatten element children nested to any depth and drop null/undefined/false placeholders.
+ * Any depth matters: renderPages passes an array of [lineNumberSpan, text] pairs, and a one-level
+ * flatten would leave each pair as an array, which String() turns into "[object HTMLSpanElement], text".
+ */
+function flattenChildren(children) {
+  return children.flat(Infinity).filter((c) => c !== null && c !== undefined && c !== false);
+}
+
 /** Build an element. Children are nodes or strings; strings become text nodes (never parsed as HTML). */
 function el(tag, attrs = {}, ...children) {
   const node = document.createElement(tag);
@@ -162,8 +171,7 @@ function el(tag, attrs = {}, ...children) {
     if (k === "class") node.className = v;
     else node.setAttribute(k, v);
   }
-  for (const child of children.flat()) {
-    if (child === null || child === undefined || child === false) continue;
+  for (const child of flattenChildren(children)) {
     node.append(child instanceof Node ? child : document.createTextNode(String(child)));
   }
   return node;
@@ -382,5 +390,5 @@ function boot() {
 
 if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded", boot);
 if (typeof module !== "undefined") {
-  module.exports = { LOW_CONFIDENCE, flattenRows, lineSummary, flagsFor, rowSeverity, sortRows, highlightSegments, summarize };
+  module.exports = { LOW_CONFIDENCE, flattenChildren, flattenRows, lineSummary, flagsFor, rowSeverity, sortRows, highlightSegments, summarize };
 }

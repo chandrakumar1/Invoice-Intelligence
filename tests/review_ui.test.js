@@ -94,3 +94,12 @@ test("summary counts", () => {
   assert.equal(s.total, rows.length);
   assert.ok(s.low >= 3); // invoice number, due date and taxable value are missing
 });
+
+test("element children are flattened to any depth, so nodes are never stringified", () => {
+  // Shape renderPages passes: one array of [lineNumberSpan, text] pairs per page.
+  const span = { tag: "span" };
+  const kids = ui.flattenChildren([[[span, " first\n"], [span, " second\n"]]]);
+  assert.deepEqual(kids, [span, " first\n", span, " second\n"]);
+  assert.ok(kids.every((k) => !Array.isArray(k)));
+  assert.deepEqual(ui.flattenChildren(["a", null, [undefined, [false, "b"]], 0, ""]), ["a", "b", 0, ""]);
+});
